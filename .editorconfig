@@ -1,0 +1,39 @@
+# EditorConfig — https://editorconfig.org
+# TechFeed solution-wide conventions.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,csproj,props,targets,razor,html,css}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# C# — nullable reference types and implicit usings are enabled
+# solution-wide via Directory.Build.props (MSBuild properties).
+[*.cs]
+# Language / usings
+csharp_using_directive_placement = outside_namespace:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# Prefer modern C# idioms
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_prefer_braces = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+
+# Nullable annotation context is enforced by the compiler (see Directory.Build.props);
+# surface nullable analysis issues while editing.
+dotnet_diagnostic.CS8600.severity = suggestion
+dotnet_diagnostic.CS8602.severity = suggestion
+dotnet_diagnostic.CS8618.severity = suggestion

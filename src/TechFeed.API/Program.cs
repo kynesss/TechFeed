@@ -1,6 +1,9 @@
 using MongoDB.Driver;
+using Refit;
 using TechFeed.Core;
 using TechFeed.Infrastructure.Configuration;
+using TechFeed.Infrastructure.ExternalApis.DevTo;
+using TechFeed.Infrastructure.ExternalApis.HackerNews;
 using TechFeed.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +30,20 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 });
 
 builder.Services.AddSingleton<IArticleRepository, MongoArticleRepository>();
+
+// External article providers (Refit typed clients).
+builder.Services
+    .AddRefitClient<IDevToClient>()
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dev.to"));
+
+builder.Services
+    .AddRefitClient<IHackerNewsClient>()
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://hacker-news.firebaseio.com"));
+
+// Register both source clients under the common contract so consumers can
+// inject IEnumerable<IArticleSourceClient> and get every provider at once.
+builder.Services.AddTransient<IArticleSourceClient, DevToSourceClient>();
+builder.Services.AddTransient<IArticleSourceClient, HackerNewsSourceClient>();
 
 var app = builder.Build();
 

@@ -12,6 +12,9 @@ public class ArticleDocument
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
+    // Omit _id from the BSON when null so an upsert-insert lets the server
+    // generate a fresh ObjectId (ReplaceOne does not run the id generator).
+    [BsonIgnoreIfNull]
     public string? Id { get; set; }
 
     [BsonElement("externalId")]

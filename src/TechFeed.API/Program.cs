@@ -37,7 +37,12 @@ builder.Services.AddSingleton<IArticleRepository, MongoArticleRepository>();
 // External article providers (Refit typed clients).
 builder.Services
     .AddRefitClient<IDevToClient>()
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dev.to"));
+    .ConfigureHttpClient(c =>
+    {
+        c.BaseAddress = new Uri("https://dev.to");
+        // dev.to rejects requests without a User-Agent as "Forbidden Bots" (403).
+        c.DefaultRequestHeaders.UserAgent.ParseAdd("TechFeed/1.0");
+    });
 
 builder.Services
     .AddRefitClient<IHackerNewsClient>()

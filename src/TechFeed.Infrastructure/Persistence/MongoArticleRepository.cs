@@ -33,6 +33,25 @@ public class MongoArticleRepository : IArticleRepository
 
     public async Task<List<Article>> GetAllAsync(string? tag, string? source, int limit)
     {
+        var documents = await _collection
+            .Find(BuildFilter(tag, source))
+            .SortByDescending(x => x.PublishedAt)
+            .Limit(limit)
+            .ToListAsync();
+
+        return documents.Select(d => d.ToDomain()).ToList();
+    }
+
+    public async Task<int> CountAsync(string? tag, string? source)
+    {
+        var count = await _collection.CountDocumentsAsync(BuildFilter(tag, source));
+
+        // CountDocuments returns a long; article counts comfortably fit an int.
+        return (int)count;
+    }
+
+    private static FilterDefinition<ArticleDocument> BuildFilter(string? tag, string? source)
+    {
         var builder = Builders<ArticleDocument>.Filter;
         var filter = builder.Empty;
 
@@ -46,13 +65,7 @@ public class MongoArticleRepository : IArticleRepository
             filter &= builder.Eq(x => x.Source, source);
         }
 
-        var documents = await _collection
-            .Find(filter)
-            .SortByDescending(x => x.PublishedAt)
-            .Limit(limit)
-            .ToListAsync();
-
-        return documents.Select(d => d.ToDomain()).ToList();
+        return filter;
     }
 
     public async Task UpsertAsync(Article article)

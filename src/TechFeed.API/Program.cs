@@ -72,5 +72,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapFeedEndpoints();
+app.MapArticleEndpoints();
 
 app.Run();

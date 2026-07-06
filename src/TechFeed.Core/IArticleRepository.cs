@@ -6,6 +6,8 @@ public interface IArticleRepository
 
     Task<List<Article>> GetAllAsync(string? tag, string? source, int limit);
 
+    Task<int> CountAsync(string? tag, string? source);
+
     Task UpsertAsync(Article article);
 
     Task<bool> ExistsAsync(string externalId, string source);

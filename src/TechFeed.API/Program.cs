@@ -1,10 +1,13 @@
 using MongoDB.Driver;
 using Refit;
+using Scalar.AspNetCore;
+using TechFeed.API.Endpoints;
 using TechFeed.Core;
 using TechFeed.Infrastructure.Configuration;
 using TechFeed.Infrastructure.ExternalApis.DevTo;
 using TechFeed.Infrastructure.ExternalApis.HackerNews;
 using TechFeed.Infrastructure.Persistence;
+using TechFeed.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +48,9 @@ builder.Services
 builder.Services.AddTransient<IArticleSourceClient, DevToSourceClient>();
 builder.Services.AddTransient<IArticleSourceClient, HackerNewsSourceClient>();
 
+// Feed refresh use case (combines the source clients with the repository).
+builder.Services.AddScoped<IFeedRefreshService, FeedRefreshService>();
+
 var app = builder.Build();
 
 // Eagerly resolve the repository so its unique index on (ExternalId, Source)
@@ -55,8 +61,11 @@ app.Services.GetRequiredService<IArticleRepository>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
+
+app.MapFeedEndpoints();
 
 app.Run();

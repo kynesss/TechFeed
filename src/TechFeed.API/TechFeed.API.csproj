@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <!-- Pin transitive Microsoft.OpenApi to a patched version (NU1903: GHSA-v5pm-xwqc-g5wc affects 2.0.0). -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.9.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.10" />
   </ItemGroup>
 
   <ItemGroup>

@@ -23,5 +23,15 @@ services:
     depends_on:
       - mongodb
 
+  redis:
+    image: redis:7-alpine
+    container_name: techfeed-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   mongodb_data:
+  redis_data:

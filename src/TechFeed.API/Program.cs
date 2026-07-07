@@ -1,8 +1,10 @@
 using MongoDB.Driver;
 using Refit;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
 using TechFeed.API.Endpoints;
 using TechFeed.Core;
+using TechFeed.Infrastructure.Caching;
 using TechFeed.Infrastructure.Configuration;
 using TechFeed.Infrastructure.ExternalApis.DevTo;
 using TechFeed.Infrastructure.ExternalApis.HackerNews;
@@ -33,6 +35,18 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 });
 
 builder.Services.AddSingleton<IArticleRepository, MongoArticleRepository>();
+
+// Redis distributed cache.
+builder.Services.Configure<RedisSettings>(
+    builder.Configuration.GetSection(nameof(RedisSettings)));
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RedisSettings>>().Value;
+    return ConnectionMultiplexer.Connect(settings.ConnectionString);
+});
+
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 // External article providers (Refit typed clients).
 builder.Services

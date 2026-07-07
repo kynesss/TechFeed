@@ -4,6 +4,9 @@
 [Oo]ut/
 artifacts/
 
+# Logs (Serilog file sink)
+logs/
+
 # IDE / editor
 .vs/
 .idea/

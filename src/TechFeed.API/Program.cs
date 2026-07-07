@@ -1,8 +1,12 @@
 using MongoDB.Driver;
 using Refit;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
 using StackExchange.Redis;
+using TechFeed.API.Configuration;
 using TechFeed.API.Endpoints;
+using TechFeed.API.Middleware;
 using TechFeed.Core;
 using TechFeed.Infrastructure.Caching;
 using TechFeed.Infrastructure.Configuration;
@@ -13,9 +17,29 @@ using TechFeed.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Structured logging via Serilog: readable console + daily rolling file.
+builder.Host.UseSerilog((context, configuration) => configuration
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        "logs/techfeed-.log",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"));
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// API key protection for the refresh endpoint.
+builder.Services.Configure<ApiSettings>(
+    builder.Configuration.GetSection(nameof(ApiSettings)));
+
+// Global exception handling (generic 500, full detail logged server-side).
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // MongoDB configuration and data-access layer.
 builder.Services.Configure<MongoDbSettings>(
@@ -72,6 +96,9 @@ builder.Services.AddScoped<IFeedRefreshService, FeedRefreshService>();
 
 var app = builder.Build();
 
+// Convert unhandled exceptions to a generic 500 (details logged server-side).
+app.UseExceptionHandler();
+
 // Eagerly resolve the repository so its unique index on (ExternalId, Source)
 // is created at startup rather than on first use.
 app.Services.GetRequiredService<IArticleRepository>();
@@ -84,6 +111,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Protect POST /api/feed/refresh with the X-Api-Key header.
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapFeedEndpoints();
 app.MapArticleEndpoints();
